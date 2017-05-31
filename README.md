@@ -1,13 +1,15 @@
 
-# react-native-react-native-geo-fence
+# react-native-geo-fence
 
 ## Getting started
 
-`$ npm install react-native-react-native-geo-fence --save`
+`$ npm install react-native-geo-fence --save`
+
+`$ yarn add react-native-geo-fence`
 
 ### Mostly automatic installation
 
-`$ react-native link react-native-react-native-geo-fence`
+`$ react-native link react-native-geo-fence`
 
 ### Manual installation
 
@@ -34,18 +36,10 @@
       compile project(':react-native-react-native-geo-fence')
   	```
 
-#### Windows
-[Read it! :D](https://github.com/ReactWindows/react-native)
-
-1. In Visual Studio add the `RNReactNativeGeoFence.sln` in `node_modules/react-native-react-native-geo-fence/windows/RNReactNativeGeoFence.sln` folder to their solution, reference from their app.
-2. Open up your `MainPage.cs` app
-  - Add `using Com.Reactlibrary.RNReactNativeGeoFence;` to the usings at the top of the file
-  - Add `new RNReactNativeGeoFencePackage()` to the `List<IReactPackage>` returned by the `Packages` method
-
 
 ## Usage
 ```javascript
-import RNReactNativeGeoFence from 'react-native-react-native-geo-fence';
+import RNReactNativeGeoFence from 'react-native-geo-fence';
 
 // TODO: What to do with the module?
 RNReactNativeGeoFence;
