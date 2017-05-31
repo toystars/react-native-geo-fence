@@ -2,19 +2,33 @@
 {
   "name": "react-native-geo-fence",
   "version": "1.0.0",
-  "description": "",
+  "description": "Simple React-Native geofencing package",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:toystars/react-native-geo-fence.git"
+  },
   "keywords": [
-    "react-native"
+    "reactnative",
+    "geo-fencing",
+    "geofence",
+    "react-native-geo-fence",
+    "location-geo-fence",
+    "location",
+    "RN-location"
   ],
-  "author": "",
-  "license": "",
-  "peerDependencies": {
-    "react-native": "^0.41.2",
-    "react-native-windows": "0.41.0-rc.1"
+  "author": "Mustapha Babatunde Oluwaleke",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/toystars/react-native-geo-fence/issues"
+  },
+  "homepage": "https://github.com/toystars/react-native-geo-fence#readme",
 
+
+  "peerDependencies": {
+    "react-native": "^0.41.2"
   }
 }
