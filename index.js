@@ -1,6 +1,6 @@
 
 import { NativeModules } from 'react-native';
 
-const { RNReactNativeGeoFence } = NativeModules;
+const { RNGeoFenceModule } = NativeModules;
 
-export default RNReactNativeGeoFence;
+export default RNGeoFenceModule;
