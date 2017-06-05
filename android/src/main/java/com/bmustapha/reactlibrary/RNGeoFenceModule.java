@@ -140,7 +140,7 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
         }
     }
 
-    public void getLastKnownLocation() {
+    private void getLastKnownLocation() {
         Log.d(TAG, "getLastKnownLocation()");
         if (checkPermission()) {
             lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
@@ -247,14 +247,30 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     }
 
 
+    /**
+     * Public methods exposed to static reference instance
+     *
+     *
+     */
 
 
-    /*
-    * React methods
-    *
-    *
-    * */
+    /**
+     * Continues geofencing flow after location permission has been granted by user
+     *
+     * @return void
+     */
+    public void resume() {
+        getLastKnownLocation();
+    }
 
+
+
+
+    /**
+     * React methods
+     *
+     *
+     */
 
 
     /**

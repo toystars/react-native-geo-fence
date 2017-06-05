@@ -30,7 +30,7 @@ $ yarn add react-native-geo-fence
 2. Append the following lines to `android/settings.gradle`:
   	```
   	include ':react-native-geo-fence'
-  	project(':react-native-geo-fence').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-react-native-geo-fence/android')
+  	project(':react-native-geo-fence').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-geo-fence/android')
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
@@ -157,7 +157,7 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
         case RNGeoFenceModule_REQ_PERMISSION: {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 // Permission granted
-                RNGeoFenceModuleContext.getLastKnownLocation();
+                RNGeoFenceModuleContext.resume();
             }
             break;
         }
