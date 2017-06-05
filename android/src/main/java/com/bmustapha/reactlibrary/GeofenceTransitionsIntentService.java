@@ -1,25 +1,7 @@
-/**
- * Copyright 2014 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.bmustapha.reactlibrary;
 
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -31,7 +13,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.bmustapha.reactlibrary.RNGeoFenceModule.GlobalReadableMap;
@@ -98,9 +79,14 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 writableArray.pushMap(writableMap);
             }
 
+            // create final event emitter object argument
+            WritableMap finalEventEmitterObject = Arguments.createMap();
+            finalEventEmitterObject.putArray("data", writableArray);
+            finalEventEmitterObject.putString("event", "geofenceTrigger");
+
             SReactApplicationContext
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("GeofenceEvent", writableArray);
+                    .emit("GeofenceEvent", finalEventEmitterObject);
         } else {
             // Log the error.
             Log.e(TAG, "Geofence transition error: invalid transition type " + geofenceTransition);
@@ -116,32 +102,6 @@ public class GeofenceTransitionsIntentService extends IntentService {
         }
         return null;
     }
-
-    /**
-     * Gets transition details and returns them as a formatted string.
-     *
-     * @param context               The app context.
-     * @param geofenceTransition    The ID of the geofence transition.
-     * @param triggeringGeofences   The geofence(s) triggered.
-     * @return                      The transition details formatted as String.
-     */
-    private String getGeofenceTransitionDetails(
-            Context context,
-            int geofenceTransition,
-            List<Geofence> triggeringGeofences) {
-
-        String geofenceTransitionString = getTransitionString(geofenceTransition);
-
-        // Get the Ids of each geofence that was triggered.
-        ArrayList triggeringGeofencesIdsList = new ArrayList();
-        for (Geofence geofence : triggeringGeofences) {
-            triggeringGeofencesIdsList.add(geofence.getRequestId());
-        }
-        String triggeringGeofencesIdsString = TextUtils.join(", ",  triggeringGeofencesIdsList);
-
-        return geofenceTransitionString + ": " + triggeringGeofencesIdsString;
-    }
-
 
     /**
      * Maps geofence transition types to their human-readable equivalents.

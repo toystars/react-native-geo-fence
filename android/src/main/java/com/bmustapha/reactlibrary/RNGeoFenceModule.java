@@ -1,11 +1,17 @@
 package com.bmustapha.reactlibrary;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -20,17 +26,21 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 
 public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
-        ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status> {
+        ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status>, LocationListener {
 
-    private String TAG = "RNGeofencing";
+    private String TAG = "GeofenceTransitionsIS";
 
-    private final ReactApplicationContext reactContext;
     private GoogleApiClient mGoogleApiClient;
+
+    // to keep track of user location
+    private Location lastLocation;
 
     /**
      * The list of geofences used in this sample.
@@ -45,15 +55,14 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
     // global list of coordinates
     public static ArrayList<ReadableMap> GlobalReadableMap;
-
+    public static final int RNGeoFenceModule_REQ_PERMISSION = 819283;
     public static ReactApplicationContext SReactApplicationContext;
+    public static RNGeoFenceModule RNGeoFenceModuleContext;
 
 
 
     public RNGeoFenceModule(ReactApplicationContext reactContext) {
         super(reactContext);
-
-        this.reactContext = reactContext;
 
         // Initially set the PendingIntent used in addGeofences() and removeGeofences() to null.
         mGeofencePendingIntent = null;
@@ -66,6 +75,9 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
         SReactApplicationContext = reactContext;
 
+        // reference context in static object
+        RNGeoFenceModuleContext = this;
+
         buildGoogleApiClient();
     }
 
@@ -74,6 +86,7 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
         return "RNGeoFenceModule";
     }
 
+
     private synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(getReactApplicationContext())
                 .addConnectionCallbacks(this)
@@ -81,6 +94,12 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.d(TAG, "onLocationChanged ["+location+"]");
+        lastLocation = location;
     }
 
     @Override
@@ -111,17 +130,77 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     @Override
     public void onResult(@NonNull Status status) {
         if (status.isSuccess()) {
-            Toast.makeText(
-                    getReactApplicationContext(),
-                    "Geofence operation successful",
-                    Toast.LENGTH_LONG
-            ).show();
+            Log.e(TAG, "Geofence operation successful");
         } else {
+            Log.e(TAG, "onResult Failure");
             // Get the status code for the error and log it using a user-friendly message.
             String errorMessage = GeofenceErrorMessages.getErrorString(getReactApplicationContext(),
                     status.getStatusCode());
             Log.e(TAG, errorMessage);
         }
+    }
+
+    public void getLastKnownLocation() {
+        Log.d(TAG, "getLastKnownLocation()");
+        if (checkPermission()) {
+            lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (lastLocation != null) {
+                Log.i(TAG, "LasKnown location. " +
+                        "Long: " + lastLocation.getLongitude() +
+                        " | Lat: " + lastLocation.getLatitude());
+                startLocationUpdates();
+            } else {
+                Log.w(TAG, "No location retrieved yet");
+                startLocationUpdates();
+            }
+            // start geofence
+            LocationServices.GeofencingApi.addGeofences(
+                    mGoogleApiClient,
+                    // The GeofenceRequest object.
+                    getGeofencingRequest(),
+                    // A pending intent that that is reused when calling removeGeofences(). This
+                    // pending intent is used to generate an intent when a matched geofence
+                    // transition is observed.
+                    getGeofencePendingIntent()
+            ).setResultCallback(this); // Result processed in onResult().
+        } else {
+            askPermission();
+        }
+    }
+
+    private void askPermission() {
+        Log.d(TAG, "askPermission()");
+        Activity currentActivity = getCurrentActivity();
+        if (currentActivity != null) {
+            ActivityCompat.requestPermissions(
+                    getCurrentActivity(),
+                    new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+                    RNGeoFenceModule_REQ_PERMISSION
+            );
+        }
+    }
+
+    private void startLocationUpdates() {
+        // Defined in milliseconds.
+        // This number in extremely low, and should be used only for debug
+        int UPDATE_INTERVAL =  1000; // update later to 3 * 60 * 1000; // 3 minutes
+        int FASTEST_INTERVAL = 900; // update later to 30 * 1000;  // 30 secs
+        Log.i(TAG, "startLocationUpdates()");
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
+
+        if (checkPermission()) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this, Looper.getMainLooper());
+        }
+    }
+
+    private boolean checkPermission() {
+        Log.d(TAG, "checkPermission()");
+        // Ask for permission if it wasn't granted yet
+        return (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED );
     }
 
 
@@ -212,12 +291,13 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
                                 geofenceRadiusInMetres
                         )
 
+                        .setNotificationResponsiveness(20)
+
                         // Set the expiration duration of the geofence. This geofence gets automatically
                         // removed after this period of time.
                         .setExpirationDuration(geofenceExpirationInMilliseconds)
 
-                        // Set the transition types of interest. Alerts are only generated for these
-                        // transition. We track entry and exit transitions in this sample.
+                        // Set the transition types of interest. Alerts are only generated for these transition
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
                                 Geofence.GEOFENCE_TRANSITION_EXIT)
 
@@ -236,23 +316,12 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     @SuppressWarnings("unused")
     public void beginGeofencing() {
         if (!mGoogleApiClient.isConnected()) {
-            Toast.makeText(getReactApplicationContext(),
-                    "GoogleApiClient no yet connected. Try again.",
-                    Toast.LENGTH_LONG)
-                    .show();
+            Log.e(TAG, "GoogleApiClient no yet connected. Try again.");
             return;
         }
-
         try {
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    // The GeofenceRequest object.
-                    getGeofencingRequest(),
-                    // A pending intent that that is reused when calling removeGeofences(). This
-                    // pending intent is used to generate an intent when a matched geofence
-                    // transition is observed.
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
+            // get user last location
+            getLastKnownLocation();
         } catch (SecurityException securityException) {
             // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
             logSecurityException(securityException);
@@ -268,10 +337,7 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     @SuppressWarnings("unused")
     public void stopGeofencing() {
         if (!mGoogleApiClient.isConnected()) {
-            Toast.makeText(getReactApplicationContext(),
-                    "GoogleApiClient no yet connected. Try again.",
-                    Toast.LENGTH_LONG)
-                    .show();
+            Log.e(TAG, "GoogleApiClient no yet connected. Try again.");
             return;
         }
         try {
@@ -286,5 +352,4 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
             logSecurityException(securityException);
         }
     }
-
 }
