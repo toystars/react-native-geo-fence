@@ -34,8 +34,16 @@ $ yarn add react-native-geo-fence
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
-      compile project(':react-native-geo-fence')
+  	compile project(':react-native-geo-fence')
   	```
+  	`react-native-geo-fence` comes bundled with latest `play-services` as at every release. If you want to use a different version to prevent version conflict, do as below
+  	```
+  	compile(project(':react-native-geo-fence')) {
+  	    exclude group: 'com.google.android.gms'
+  	}
+  	compile 'com.google.android.gms:play-services-base:10.2.6' // replace 10.2.6 with your play services version number
+  	compile 'com.google.android.gms:play-services-location:10.2.6' // replace 10.2.6 with your play services version number
+    ```
 
 #### iOS
 
