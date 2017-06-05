@@ -182,9 +182,8 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
     private void startLocationUpdates() {
         // Defined in milliseconds.
-        // This number in extremely low, and should be used only for debug
-        int UPDATE_INTERVAL =  1000; // update later to 3 * 60 * 1000; // 3 minutes
-        int FASTEST_INTERVAL = 900; // update later to 30 * 1000;  // 30 secs
+        int UPDATE_INTERVAL =  3 * 60 * 1000;
+        int FASTEST_INTERVAL = 30 * 1000;
         Log.i(TAG, "startLocationUpdates()");
         LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
