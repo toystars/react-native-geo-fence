@@ -144,7 +144,7 @@ export default class Home extends Component {
 
 ### Managing Location permission in Android 6.0 and above
 `react-native-geo-fence` uses `ACCESS_FINE_LOCATION` permission to track user's location changes. 
-Prior to Android 6.0, all locations specified in app manifest will be granted at install time. For Android 6.0 and above, permissions need to be requested at run time. To achieve this, react-native-geo-fence requests for said permission when `RNGeofence.beginGeofencing()` is triggered. Due to this, some other setups are required to be completed to enable `react-native-geo-fence` know when user has granted said permission.
+Prior to Android 6.0, all permissions specified in app manifest will be granted at install time. For Android 6.0 and above, permissions need to be requested at run time. To achieve this, react-native-geo-fence requests for said permission when `RNGeofence.beginGeofencing()` is triggered. Due to this, some other setups are required to be completed to enable `react-native-geo-fence` know when user has granted said permission.
 
 Add this to `AndroidManifest.xml`
 ```xml
