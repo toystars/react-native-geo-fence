@@ -35,5 +35,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-base:10.2.6'
     compile 'com.google.android.gms:play-services-location:10.2.6'
     compile 'com.google.maps.android:android-maps-utils:0.3.4'
+    compile group: 'com.github.javadev', name: 'underscore', version: '1.15'
 }
   

@@ -13,11 +13,16 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
+import com.github.underscore.$;
+import com.github.underscore.Function;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -52,6 +57,12 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
      */
     private PendingIntent mGeofencePendingIntent;
 
+    // hold promise object from JS
+    private Promise pendingPromise;
+
+    // location update intervals
+    private int UPDATE_INTERVAL;
+    private int FASTEST_INTERVAL;
 
     // global list of coordinates
     public static ArrayList<ReadableMap> GlobalReadableMap;
@@ -66,6 +77,9 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
         // Initially set the PendingIntent used in addGeofences() and removeGeofences() to null.
         mGeofencePendingIntent = null;
+
+        // set promise to null
+        pendingPromise = null;
 
         // Empty list for storing geofences.
         mGeofenceList = new ArrayList<>();
@@ -98,8 +112,13 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(TAG, "onLocationChanged ["+location+"]");
+        // Log.d(TAG, "onLocationChanged ["+location+"]");
         lastLocation = location;
+        if (location != null) {
+            if (pendingPromise != null) {
+                resolveLocationQueryPromise(location);
+            }
+        }
     }
 
     @Override
@@ -154,15 +173,17 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
                 startLocationUpdates();
             }
             // start geofence
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    // The GeofenceRequest object.
-                    getGeofencingRequest(),
-                    // A pending intent that that is reused when calling removeGeofences(). This
-                    // pending intent is used to generate an intent when a matched geofence
-                    // transition is observed.
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
+            if (mGeofenceList.size() > 0) {
+                LocationServices.GeofencingApi.addGeofences(
+                        mGoogleApiClient,
+                        // The GeofenceRequest object.
+                        getGeofencingRequest(),
+                        // A pending intent that that is reused when calling removeGeofences(). This
+                        // pending intent is used to generate an intent when a matched geofence
+                        // transition is observed.
+                        getGeofencePendingIntent()
+                ).setResultCallback(this); // Result processed in onResult()
+            }
         } else {
             askPermission();
         }
@@ -181,15 +202,11 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     }
 
     private void startLocationUpdates() {
-        // Defined in milliseconds.
-        int UPDATE_INTERVAL =  3 * 60 * 1000;
-        int FASTEST_INTERVAL = 30 * 1000;
         Log.i(TAG, "startLocationUpdates()");
         LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(UPDATE_INTERVAL)
                 .setFastestInterval(FASTEST_INTERVAL);
-
         if (checkPermission()) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this, Looper.getMainLooper());
         }
@@ -248,6 +265,40 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
 
 
     /**
+     * Resolves the pending promise for user current location request
+     *
+     * @param Location location to use for promise resolve
+     *
+     * @return void
+     */
+    private void resolveLocationQueryPromise(Location location) {
+        if (pendingPromise != null) {
+            WritableMap writableMap = new WritableNativeMap();
+            writableMap.putDouble("longitude", location.getLongitude());
+            writableMap.putDouble("latitude", location.getLatitude());
+            writableMap.putString("provider", location.getProvider());
+            writableMap.putDouble("accuracy", location.getAccuracy());
+            writableMap.putDouble("altitude", location.getAltitude());
+            pendingPromise.resolve(writableMap);
+        }
+        pendingPromise = null;
+    }
+
+
+    /**
+     * Rejects the pending promise for user current location request
+     *
+     * @return void
+     */
+    private void rejectLocationQueryPromise() {
+        if (pendingPromise != null) {
+            pendingPromise.reject(new Throwable("User location not found"));
+        }
+        pendingPromise = null;
+    }
+
+
+    /**
      * Public methods exposed to static reference instance
      *
      *
@@ -269,8 +320,22 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
     /**
      * React methods
      *
+     */
+
+    /**
+     * Retrieves current user location based on last known location updated by the location change listener
+     *
+     * @param int updateInterval interval for location updates
+     *
+     * @param int fastestInterval fastest interval for location update
      *
      */
+    @ReactMethod
+    @SuppressWarnings({"unchecked", "UnusedParameters", "unused"})
+    public void init(int updateInterval, int fastestInterval) {
+        UPDATE_INTERVAL = updateInterval;
+        FASTEST_INTERVAL = fastestInterval;
+    }
 
 
     /**
@@ -282,7 +347,7 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
      * @param geofenceRadiusInMetres geofence radius in metres
      *
      *
-     *@param geofenceExpirationInMilliseconds geofence expiration time in milliseconds
+     * @param geofenceExpirationInMilliseconds geofence expiration time in milliseconds
      *
      */
     @ReactMethod
@@ -365,6 +430,34 @@ public class RNGeoFenceModule extends ReactContextBaseJavaModule implements
         } catch (SecurityException securityException) {
             // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
             logSecurityException(securityException);
+        }
+    }
+
+    /**
+     * Retrieves current user location based on last known location updated by the location change listener
+     *
+     * @param int timeOutInSeconds - number of seconds before request times out
+     *
+     * @param Promise promise to resolve when location is found
+     *
+     */
+    @ReactMethod
+    @SuppressWarnings({"unchecked", "UnusedParameters", "unused"})
+    public void getCurrentUserLocation(int timeOutInSeconds, Promise promise) {
+        pendingPromise = promise;
+        try {
+            if (lastLocation != null) {
+                resolveLocationQueryPromise(lastLocation);
+            } else {
+                $.setTimeout(new Function<Void>() {
+                    public Void apply() {
+                        rejectLocationQueryPromise();
+                        return null;
+                    }
+                }, timeOutInSeconds * 1000);
+            }
+        } catch (Exception e) {
+            promise.reject(new Throwable("User location not found"));
         }
     }
 }

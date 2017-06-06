@@ -4,11 +4,11 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
@@ -73,14 +73,14 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 Geofence geofence = triggeringGeofences.get(i);
                 String key = geofence.getRequestId();
                 ReadableMap geofenceMap = getGeofenceFromKey(key);
-                WritableMap writableMap = Arguments.createMap();
+                WritableMap writableMap = new WritableNativeMap();
                 writableMap.merge(geofenceMap);
                 writableMap.putString("transition", getTransitionString(geofenceTransition));
                 writableArray.pushMap(writableMap);
             }
 
             // create final event emitter object argument
-            WritableMap finalEventEmitterObject = Arguments.createMap();
+            WritableMap finalEventEmitterObject = new WritableNativeMap();
             finalEventEmitterObject.putArray("data", writableArray);
             finalEventEmitterObject.putString("event", "geofenceTrigger");
 
