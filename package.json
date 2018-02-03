@@ -1,7 +1,7 @@
 
 {
   "name": "react-native-geo-fence",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Simple React-Native geofencing package",
   "main": "index.js",
   "scripts": {
