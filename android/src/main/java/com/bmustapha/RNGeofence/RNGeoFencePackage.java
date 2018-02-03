@@ -1,4 +1,4 @@
-package com.bmustapha.reactlibrary;
+package com.bmustapha.RNGeofence;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
@@ -16,7 +16,6 @@ public class RNGeoFencePackage implements ReactPackage {
       return Arrays.<NativeModule>asList(new RNGeoFenceModule(reactContext));
     }
 
-    @Override
     public List<Class<? extends JavaScriptModule>> createJSModules() {
       return Collections.emptyList();
     }

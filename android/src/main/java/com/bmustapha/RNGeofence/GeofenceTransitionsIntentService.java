@@ -1,4 +1,4 @@
-package com.bmustapha.reactlibrary;
+package com.bmustapha.RNGeofence;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -15,8 +15,8 @@ import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.List;
 
-import static com.bmustapha.reactlibrary.RNGeoFenceModule.GlobalReadableMap;
-import static com.bmustapha.reactlibrary.RNGeoFenceModule.SReactApplicationContext;
+import static com.bmustapha.RNGeofence.RNGeoFenceModule.GlobalReadableMap;
+import static com.bmustapha.RNGeofence.RNGeoFenceModule.SReactApplicationContext;
 
 /**
  * Listener for geofence transition changes.

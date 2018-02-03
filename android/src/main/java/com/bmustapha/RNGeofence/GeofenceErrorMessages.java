@@ -1,4 +1,4 @@
-package com.bmustapha.reactlibrary;
+package com.bmustapha.RNGeofence;
 
 import android.content.Context;
 
