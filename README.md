@@ -25,7 +25,7 @@ $ yarn add react-native-geo-fence
 #### Android
 
 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
-  - Add `import com.bmustapha.reactlibrary.RNGeoFencePackage;;` to the imports at the top of the file
+  - Add `import com.bmustapha.RNGeofence.RNGeoFencePackage;;` to the imports at the top of the file
   - Add `new RNGeoFencePackage()` to the list returned by the `getPackages()` method
 2. Append the following lines to `android/settings.gradle`:
   	```
@@ -121,6 +121,16 @@ export default class Home extends Component {
       longitude: 9.8125365,
     }];
 
+    // create location update interval
+    const updateIntervalInMilliseconds = 10000;
+    const fastestIntervalInMilliseconds = 3000;
+
+    // initialize geofencing
+    RNGeofence.init(
+      updateIntervalInMilliseconds,
+      fastestIntervalInMilliseconds,
+    );
+
     // create radius and expiry time
     const geofenceRadiusInMetres = 500; // geofence radius
     const geofenceExpirationInMilliseconds = 86400000; // geofence expiration time
@@ -154,8 +164,8 @@ Add this to `AndroidManifest.xml`
 Add the snippet below to your project `MainActivity.java`
 ```java
 // import the following lines at the top
-import static com.bmustapha.reactlibrary.RNGeoFenceModule.RNGeoFenceModuleContext;
-import static com.bmustapha.reactlibrary.RNGeoFenceModule.RNGeoFenceModule_REQ_PERMISSION;
+import static com.bmustapha.RNGeofence.RNGeoFenceModule.RNGeoFenceModuleContext;
+import static com.bmustapha.RNGeofence.RNGeoFenceModule.RNGeoFenceModule_REQ_PERMISSION;
 
 // override MainActivity onRequestPermissionsResult
 @Override
@@ -163,7 +173,7 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     switch (requestCode) {
         case RNGeoFenceModule_REQ_PERMISSION: {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted
                 RNGeoFenceModuleContext.resume();
             }
